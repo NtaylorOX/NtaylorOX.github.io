@@ -14,11 +14,11 @@ SITE = Path(__file__).resolve().parents[1] / "site"
 
 
 def main() -> None:
-    tpl = (SITE / "src" / "index.template.html").read_text()
-    css = (SITE / "src" / "style.css").read_text()
-    logic = (SITE / "src" / "logic.js").read_text()
-    app = (SITE / "src" / "app.js").read_text()
-    data = json.loads((SITE / "content" / "site.json").read_text())
+    tpl = (SITE / "src" / "index.template.html").read_text(encoding="utf-8")
+    css = (SITE / "src" / "style.css").read_text(encoding="utf-8")
+    logic = (SITE / "src" / "logic.js").read_text(encoding="utf-8")
+    app = (SITE / "src" / "app.js").read_text(encoding="utf-8")
+    data = json.loads((SITE / "content" / "site.json").read_text(encoding="utf-8"))
     # `</` inside inline JSON could end the script tag early; escape it.
     data_js = "var DATA = " + json.dumps(data, ensure_ascii=False).replace("</", "<\\/") + ";"
     # logic.js declares top-level consts; app.js reads them through a single namespace L.
@@ -30,7 +30,7 @@ def main() -> None:
     html = tpl.replace("/*CSS*/", css).replace("/*DATA*/", data_js).replace("/*LOGIC*/", logic_js).replace("/*APP*/", app)
     out = SITE / "public" / "index.html"
     out.parent.mkdir(exist_ok=True)
-    out.write_text(html)
+    out.write_text(html, encoding="utf-8")
     print(f"wrote {out} ({len(html) // 1024} KB)")
 
 
