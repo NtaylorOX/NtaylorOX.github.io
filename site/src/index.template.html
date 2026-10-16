@@ -1,0 +1,166 @@
+<title>Niall Krebs-Taylor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="AI engineer building and evaluating LLM systems: agents, AI risk and evaluation, multimodal pipelines and clinical NLP. Interactive notes, projects and research.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/*CSS*/
+</style>
+
+<div class="top"><div class="wrap">
+  <a class="brand" href="#top">Niall Krebs-Taylor</a>
+  <nav aria-label="Sections"><a href="#lab">Lab</a><a href="#work">Work</a><a href="#research">Research</a></nav>
+</div></div>
+
+<div class="wrap" id="top">
+  <header class="hero">
+    <p class="eyebrow mono">AI engineer &middot; LLM systems &middot; evaluation and safety &middot; Switzerland</p>
+    <h1>I build LLM systems and test whether they can be trusted.</h1>
+    <p class="lede">PhD-trained AI engineer. I build engineering agents at Neural Concept, built AI risk and evaluation metrics at Calvin Risk and multimodal pipelines at Satalia (WPP), and did clinical language-model research at Oxford.</p>
+    <div class="actions">
+      <a class="btn primary" href="#lab">Open the lab</a>
+      <a class="btn" href="#work">See the work</a>
+      <a class="btn" href="https://github.com/NtaylorOX" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn" href="https://www.linkedin.com/in/niall-krebs-taylor-277160a0" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+    <div class="strip">
+      <canvas id="heroCanvas" role="img" aria-label="Animation of continuous batching: six request slots refill as soon as a request finishes"></canvas>
+      <div class="cap mono"><span>Continuous batching, simulated. Each row is a request slot; each block is a request.</span><span>Try it in the lab</span></div>
+    </div>
+  </header>
+
+  <section id="lab">
+    <h2>Lab</h2>
+    <p class="kicker">Small interactive notes on things I care about when building LLM systems. The maths behind each one is unit-tested. Move the sliders.</p>
+    <div class="tabs" role="tablist" aria-label="Lab notes">
+      <button class="tab" role="tab" data-tab="batch" aria-selected="true" type="button">Batching</button>
+      <button class="tab" role="tab" data-tab="kv" aria-selected="false" type="button">GPU memory</button>
+      <button class="tab" role="tab" data-tab="noise" aria-selected="false" type="button">Eval noise</button>
+      <button class="tab" role="tab" data-tab="guard" aria-selected="false" type="button">Guardrails</button>
+    </div>
+
+    <div class="panel" id="panel-batch" role="tabpanel">
+      <h3>Why serving engines batch continuously</h3>
+      <p class="muted">Output lengths vary a lot. A static batch waits for its longest request; a continuous batch refills a slot the moment one frees up. Hatched cells are idle slots.</p>
+      <div class="controls">
+        <div class="ctl"><label for="bSlots">Slots <output id="bSlotsOut">8</output></label><input id="bSlots" type="range" min="2" max="16" value="8"></div>
+        <div class="ctl"><label for="bSpeed">Speed</label><select id="bSpeed"><option value="1">1x</option><option value="2">2x</option><option value="4">4x</option></select></div>
+      </div>
+      <div class="btnrow"><button class="btn sm" id="bPlay" type="button">Pause</button><button class="btn sm" id="bNew" type="button">New workload</button></div>
+      <div class="canvas-box"><div class="lbl mono"><span>Static batching</span><span>time &rarr;</span></div><canvas id="batchStatic" role="img" aria-label="Static batching schedule"></canvas></div>
+      <div class="canvas-box"><div class="lbl mono"><span>Continuous batching</span><span>same requests, same slots</span></div><canvas id="batchCont" role="img" aria-label="Continuous batching schedule"></canvas></div>
+      <div class="stats">
+        <div class="stat"><b id="bStaticSteps">0</b><span>static steps</span></div>
+        <div class="stat"><b id="bContSteps">0</b><span>continuous steps</span></div>
+        <div class="stat"><b id="bStaticLat">0</b><span>static mean latency</span></div>
+        <div class="stat"><b id="bContLat">0</b><span>continuous mean latency</span></div>
+        <div class="stat"><b id="bGain">0%</b><span>finished sooner</span></div>
+      </div>
+      <p class="note">A step is one decoded token for every running request. Latency is in steps, with all requests arriving at once. Real engines add scheduling overheads this ignores.</p>
+    </div>
+
+    <div class="panel" id="panel-kv" role="tabpanel" hidden>
+      <h3>Will it fit, and how many users at once?</h3>
+      <p class="muted">Napkin maths for serving a model: weights plus KV cache per GPU, under tensor parallelism.</p>
+      <div class="controls">
+        <div class="ctl"><label for="kvModel">Model</label><select id="kvModel"></select></div>
+        <div class="ctl"><label for="kvGpu">GPU</label><select id="kvGpu"></select></div>
+        <div class="ctl"><label for="kvTp">GPUs (tensor parallel) <output id="kvTpOut">1</output></label><input id="kvTp" type="range" min="0" max="3" value="0"></div>
+        <div class="ctl"><label for="kvCtx">Context tokens <output id="kvCtxOut">8,192</output></label><input id="kvCtx" type="range" min="0" max="6" value="2"></div>
+        <div class="ctl"><label for="kvW">Weights</label><select id="kvW"><option value="2">bf16</option><option value="1">fp8 / int8</option><option value="0.5">int4</option></select></div>
+        <div class="ctl"><label for="kvK">KV cache</label><select id="kvK"><option value="2">bf16</option><option value="1">fp8</option></select></div>
+      </div>
+      <div class="memrow" id="kvBar" role="img" aria-label="Per-GPU memory split">
+        <div id="kvSegW" style="background:var(--seg3)"></div><div id="kvSegO" style="background:var(--idle)"></div>
+        <div id="kvSegK" style="background:var(--seg0)"></div><div id="kvSegR" style="background:var(--line)"></div>
+      </div>
+      <div class="legend mono">
+        <span><i style="background:var(--seg3)"></i>weights</span><span><i style="background:var(--idle)"></i>workspace</span>
+        <span><i style="background:var(--seg0)"></i>KV cache</span><span><i style="background:var(--line)"></i>reserve</span>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="kvWeights">0</b><span>weights per GPU</span></div>
+        <div class="stat"><b id="kvPool">0</b><span>KV pool per GPU</span></div>
+        <div class="stat"><b id="kvConc">0</b><span>concurrent sequences</span></div>
+        <div class="stat"><b id="kvTps">0</b><span>decode ceiling</span></div>
+      </div>
+      <p id="kvVerdict" class="verdict"></p>
+      <p class="note">Estimates only. Fixed 8% workspace and 10% reserve; ignores CUDA graphs, fragmentation and interconnect cost. The decode ceiling is memory bandwidth divided by weight bytes. GPU memory and bandwidth figures are approximate public specs.</p>
+    </div>
+
+    <div class="panel" id="panel-noise" role="tabpanel" hidden>
+      <h3>How much is a benchmark score worth?</h3>
+      <p class="muted">Applies to any model or benchmark. Run one evaluation of a model with a fixed true accuracy. The shaded band is the 95% interval from resampling that run.</p>
+      <div class="controls">
+        <div class="ctl"><label for="nAcc">True accuracy <output id="nAccOut">70%</output></label><input id="nAcc" type="range" min="50" max="95" value="70"></div>
+        <div class="ctl"><label for="nN">Eval items <output id="nNOut">400</output></label><input id="nN" type="range" min="0" max="6" value="3"></div>
+      </div>
+      <div class="btnrow"><button class="btn sm" id="nAgain" type="button">Run another evaluation</button></div>
+      <svg id="nHist" viewBox="0 0 600 150" width="100%" role="img" aria-label="Histogram of resampled accuracies" style="display:block;max-width:100%"></svg>
+      <div class="stats">
+        <div class="stat"><b id="nObs">0</b><span>observed accuracy</span></div>
+        <div class="stat"><b id="nCI">0</b><span>95% interval (%)</span></div>
+        <div class="stat"><b id="nHalf">0</b><span>noise</span></div>
+        <div class="stat"><b id="nNeed">0</b><span>items for &plusmn;2 pts</span></div>
+      </div>
+      <p id="nVerdict" class="verdict"></p>
+      <p class="note">The resampling uses a normal approximation of the binomial, which is fine at these sizes. Comparing two models on the same items (a paired comparison) is tighter than comparing two intervals.</p>
+    </div>
+
+    <div class="panel" id="panel-guard" role="tabpanel" hidden>
+      <h3>Why a good safety filter still floods you with false alarms</h3>
+      <p class="muted">A detector scores every request. Safe traffic scores low, unsafe traffic scores higher, and you flag anything above a threshold. The catch is how rare the unsafe traffic is.</p>
+      <div class="controls">
+        <div class="ctl"><label for="gD">Separation <output id="gDOut">3.0</output></label><input id="gD" type="range" min="10" max="40" value="30"></div>
+        <div class="ctl"><label for="gT">Threshold <output id="gTOut">1.5</output></label><input id="gT" type="range" min="-10" max="50" value="15"></div>
+        <div class="ctl"><label for="gB">Share of traffic that is unsafe <output id="gBOut">1%</output></label><input id="gB" type="range" min="0" max="6" value="2"></div>
+      </div>
+      <svg id="gChart" viewBox="0 0 600 150" width="100%" role="img" aria-label="Score distributions for safe and unsafe requests with a threshold" style="display:block;max-width:100%"></svg>
+      <div class="legend mono">
+        <span><i style="background:var(--seg3)"></i>safe requests</span><span><i style="background:var(--seg0)"></i>unsafe requests</span>
+        <span><i style="background:var(--amber)"></i>false alarms</span><span><i style="background:var(--ink)"></i>missed</span>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="gFlag">0</b><span>flagged per 10,000</span></div>
+        <div class="stat"><b id="gFalse">0</b><span>of those are false alarms</span></div>
+        <div class="stat"><b id="gMissed">0</b><span>unsafe requests missed</span></div>
+        <div class="stat"><b id="gPrec">0%</b><span>flags that are real</span></div>
+        <div class="stat"><b id="gRecall">0%</b><span>unsafe caught</span></div>
+      </div>
+      <p id="gVerdict" class="verdict"></p>
+      <p class="note">A toy model: two bell curves with equal spread, not data from any real system. The point is the base-rate effect, which holds for any filter, monitor or evaluator: tuning the threshold trades missed cases against alert fatigue, and rare events make precision collapse.</p>
+    </div>
+  </section>
+
+  <section id="work">
+    <h2>Work</h2>
+    <p class="kicker">Commercial products and research code. Commercial code is private; I am happy to discuss the design.</p>
+    <div class="chips" id="workChips" role="group" aria-label="Filter projects"></div>
+    <div class="grid" id="workGrid"></div>
+  </section>
+
+
+  <section id="writing">
+    <h2>Writing</h2>
+    <p class="empty">Nothing here yet. Write-ups will go here.</p>
+  </section>
+
+  <section id="research">
+    <h2>Research</h2>
+    <p class="kicker">Peer-reviewed work from my DPhil on clinical language models.</p>
+    <ul class="papers" id="papers"></ul>
+  </section>
+
+  <footer>
+    <div class="row">
+      <span><a href="https://github.com/NtaylorOX" target="_blank" rel="noopener">GitHub</a> &middot; <a href="https://www.linkedin.com/in/niall-krebs-taylor-277160a0" target="_blank" rel="noopener">LinkedIn</a></span>
+      <span>Plain HTML, CSS and JavaScript. Research and portfolio use only; nothing here is medical advice.</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+/*DATA*/
+/*LOGIC*/
+/*APP*/
+</script>
