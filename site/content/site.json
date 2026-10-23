@@ -6,6 +6,25 @@
   },
   "projects": [
     {
+      "title": "Multi-turn reliance evals",
+      "context": "Open source",
+      "status": "shipped",
+      "tags": [
+        "Eval",
+        "Safety",
+        "LLM",
+        "Web"
+      ],
+      "summary": "An Inspect AI pipeline that tests whether language models reinforce unhealthy emotional reliance over ten-turn conversations with simulated vulnerable users, scored turn by turn by an LLM judge.",
+      "detail": "Pilot of 48 conversations across three open-weight models, four personas and four pressure conditions. Includes a live monitor, judge validation with Cohen's kappa, and tuning of the judge rubric from labels. The pilot is small and the judge is checked against one labelled sample, which the README says plainly.",
+      "links": [
+        {
+          "label": "GitHub",
+          "href": "https://github.com/NtaylorOX/multiturn-reliance-evals"
+        }
+      ]
+    },
+    {
       "title": "AutoPR agents",
       "context": "Neural Concept",
       "status": "production",
